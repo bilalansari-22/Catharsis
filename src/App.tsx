@@ -807,7 +807,10 @@ function ChatScreen({ profile, userId, saveConversation, setActiveTab }: { profi
         systemInstruction: GEMINI_SYSTEM_PROMPT,
       });
 
-      const chatHistory = messages.map(m => ({
+      const firstUserIndex = messages.findIndex(m => m.role === 'user');
+      const historyMessages = firstUserIndex === -1 ? [] : messages.slice(firstUserIndex);
+
+      const chatHistory = historyMessages.map(m => ({
         role: m.role === 'user' ? 'user' as const : 'model' as const,
         parts: [{ text: m.content }],
       }));
