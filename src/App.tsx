@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createClient, Session, User } from '@supabase/supabase-js';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import {
   Home, MessageCircle, BookHeart, Stethoscope, Settings,
   Send, X, Calendar, Star, ChevronRight,
@@ -718,7 +718,7 @@ Rules:
 - If someone mentions crisis (suicide, self-harm), immediately provide: "Please reach out to 988 Suicide & Crisis Lifeline (call or text 988) or Crisis Text Line (text HOME to 741741). You are not alone."
 - Use a calm, supportive tone — never judgmental`;
 
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
+const genAI = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
 
 type DistressLevel = 'low' | 'moderate' | 'high';
 
@@ -802,11 +802,6 @@ function ChatScreen({ profile, userId, saveConversation, setActiveTab }: { profi
     }
 
     try {
-      const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
-        systemInstruction: GEMINI_SYSTEM_PROMPT,
-      });
-
       const firstUserIndex = messages.findIndex(m => m.role === 'user');
       const historyMessages = firstUserIndex === -1 ? [] : messages.slice(firstUserIndex);
 
@@ -815,10 +810,14 @@ function ChatScreen({ profile, userId, saveConversation, setActiveTab }: { profi
         parts: [{ text: m.content }],
       }));
 
-      const chat = model.startChat({ history: chatHistory });
+      const chat = genAI.chats.create({
+        model: 'gemini-1.5-flash',
+        config: { systemInstruction: GEMINI_SYSTEM_PROMPT },
+        history: chatHistory,
+      });
 
-      const result = await chat.sendMessage(trimmed);
-      const responseText = result.response.text();
+      const result = await chat.sendMessage({ message: trimmed });
+      const responseText = result.text ?? '';
 
       const newSeverity = Math.min(100, severityScore + calculateLocalSeverityIncrease(trimmed));
       setSeverityScore(newSeverity);
