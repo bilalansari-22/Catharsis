@@ -811,7 +811,7 @@ function ChatScreen({ profile, userId, saveConversation, setActiveTab }: { profi
       }));
 
       const chat = genAI.chats.create({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-3.1-flash-lite',
         config: { systemInstruction: GEMINI_SYSTEM_PROMPT },
         history: chatHistory,
       });
